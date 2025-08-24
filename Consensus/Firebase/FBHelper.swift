@@ -8,44 +8,82 @@
 import FirebaseAuth
 import FirebaseFirestore
 
+enum FirebaseError: String, Error {
+    case unknown = "Unknown Login Error"
+    case userNameAlreadyExist = "Username already exist"
+    case userIdNotFOund = "User ID not found"
+    
+}
+
 final class FBHelper {
     static let shared = FBHelper()
     
-    func loginUser(email: String, password: String) {
-        Auth.auth().signIn(withEmail: email, password: password) { authResult, error in
+    func loginUser(
+        email: String,
+        password: String,
+        _ completion: @escaping (Result<User, FirebaseError>) -> Void
+    ) {
+        Auth.auth().signIn(withEmail: email,
+                           password: password) { authResult, error in
             if let error = error {
-                print("Login error: \(error.localizedDescription)")
+                debugPrint(error)
+                completion(.failure(.unknown))   // Failure case
                 return
             }
             
-            // ✅ Login successful
             if let user = authResult?.user {
-                print("User logged in: \(user.email ?? "no email")")
-                
-//                self.openProfile()
+                completion(.success(user))    // Success case
+            } else {
+                completion(.failure(.unknown))
             }
         }
     }
     
-    func signUp(name: String, email: String, password: String, completion: @escaping (Error?) -> Void) {
-        Auth.auth().createUser(withEmail: email, password: password) { authResult, error in
+    func signUp(
+        name: String,
+        email: String,
+        password: String,
+        _ completion: @escaping (Result<String, FirebaseError>) -> Void
+    ) {
+        let db = Firestore.firestore()
+        
+        // Step 1: Check if username exists
+        db.collection("users").whereField("userName", isEqualTo: name).getDocuments { snapshot, error in
             if let error = error {
-                completion(error)
+                completion(.failure(.unknown))
                 return
             }
             
-            guard let uid = authResult?.user.uid else { return }
-            
-            let db = Firestore.firestore()
-            db.collection("users").document(uid).setData([
-                "userName": name,
-                "email": email,
-                "createdAt": Timestamp()
-            ]) { error in
-                completion(error)
+            if let snapshot = snapshot, !snapshot.documents.isEmpty {
+                completion(.failure(.userNameAlreadyExist))
+                return
             }
             
-//            self.openProfile()
+            // Step 2: If username is unique → create user
+            Auth.auth().createUser(withEmail: email,
+                                   password: password) { authResult, error in
+                if let error = error {
+                    completion(.failure(.unknown))
+                    return
+                }
+                
+                guard let uid = authResult?.user.uid else {
+                    completion(.failure(.userIdNotFOund))
+                    return
+                }
+                
+                db.collection("users").document(uid).setData([
+                    "userName": name,
+                    "email": email,
+                    "createdAt": Timestamp()
+                ]) { error in
+                    if let error = error {
+                        completion(.failure(.unknown))
+                    } else {
+                        completion(.success(uid)) // success with user id
+                    }
+                }
+            }
         }
     }
 }

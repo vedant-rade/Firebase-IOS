@@ -20,15 +20,19 @@ class LoginVC: UIViewController {
     }
     
     @IBAction func signupBtnAction(_ sender: UIButton) {
-        let storyboard = UIStoryboard(name: "Onboarding", bundle: nil)
-        if let nextVC = storyboard.instantiateViewController(identifier: "SignupVC") as? SignupVC {
-            navigationController?.pushViewController(nextVC, animated: true)
-        }
+        self.openSignupVC()
     }
     
     @IBAction func loginBtnAction(_ sender: UIButton) {
-        loginUser(email: emailIdTf.text ?? "", password: passwordTf.text ?? "")
-        FBHelper.shared.loginUser(email: emailIdTf.text ?? "", password: passwordTf.text ?? "")
+//        loginUser(email: emailIdTf.text ?? "", password: passwordTf.text ?? "")
+        FBHelper.shared.loginUser(email: emailIdTf.text ?? "", password: passwordTf.text ?? "") { result in
+            switch result {
+            case .success(let user):
+                self.openProfile()
+            case .failure(let error):
+                print(error.rawValue)
+            }
+        }
     }
     
     func loginUser(email: String, password: String) {
@@ -44,13 +48,6 @@ class LoginVC: UIViewController {
                 
                 self.openProfile()
             }
-        }
-    }
-    
-    func openProfile() {
-        let storyboard = UIStoryboard(name: "Profile", bundle: nil)
-        if let nextVC = storyboard.instantiateViewController(identifier: "ProfileVC") as? ProfileVC {
-            navigationController?.pushViewController(nextVC, animated: true)
         }
     }
 }

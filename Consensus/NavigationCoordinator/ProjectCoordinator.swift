@@ -21,4 +21,11 @@ extension UIViewController {
             navigationController?.pushViewController(nextVC, animated: true)
         }
     }
+    
+    func openProfile() {
+        let storyboard = UIStoryboard(name: "Profile", bundle: nil)
+        if let nextVC = storyboard.instantiateViewController(identifier: "ProfileVC") as? ProfileVC {
+            navigationController?.pushViewController(nextVC, animated: true)
+        }
+    }
 }

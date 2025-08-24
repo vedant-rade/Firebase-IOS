@@ -25,9 +25,7 @@ class ProfileVC: UIViewController {
         do {
             try Auth.auth().signOut()
             let storyboard = UIStoryboard(name: "Onboarding", bundle: nil)
-            if let nextVC = storyboard.instantiateViewController(identifier: "LoginVC") as? LoginVC {
-                navigationController?.pushViewController(nextVC, animated: true)
-            }
+            self.openLoginVC()
         } catch let signOutError as NSError {
             print("Error signing out: %@", signOutError)
         }

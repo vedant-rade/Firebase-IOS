@@ -22,8 +22,13 @@ class SignupVC: UIViewController {
     }
     
     @IBAction func signupBtnAction(_ sender: UIButton) {
-        signUp(name: nameTf.text ?? "", email: emailIdTf.text ?? "", password: passwordTf.text ?? "") { error in
-            print(error)
+        FBHelper.shared.signUp(name: nameTf.text ?? "", email: emailIdTf.text ?? "", password: passwordTf.text ?? "") { result in
+            switch result {
+            case .success(_):
+                self.openProfile()
+            case .failure(let error):
+                print(error.rawValue)
+            }
         }
     }
     
@@ -63,13 +68,6 @@ class SignupVC: UIViewController {
                 
                 self.openProfile()
             }
-        }
-    }
-    
-    func openProfile() {
-        let storyboard = UIStoryboard(name: "Profile", bundle: nil)
-        if let nextVC = storyboard.instantiateViewController(identifier: "ProfileVC") as? ProfileVC {
-            navigationController?.pushViewController(nextVC, animated: true)
         }
     }
     
